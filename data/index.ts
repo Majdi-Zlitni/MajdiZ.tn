@@ -1,3 +1,5 @@
+import images from "./images";
+export { images };
 export const navItems = [
   { name: "About", link: "#about" },
   { name: "Projects", link: "#projects" },
@@ -20,8 +22,7 @@ export const gridItems = [
   },
   {
     id: 2,
-    title:
-      "I'm very flexible with time zone communications",
+    title: "I'm very flexible with time zone",
     description: "",
     className:
       "lg:col-span-2 md:col-span-3 md:row-span-2",
@@ -57,8 +58,8 @@ export const gridItems = [
   {
     id: 5,
     title:
-      "Currently building a JS Animation library",
-    description: "The Inside Scoop",
+      "Currently building a data scraping library",
+    description: "",
     className: "md:col-span-3 md:row-span-2",
     imgClassName:
       "absolute right-0 bottom-0 md:w-96 w-60",
@@ -95,7 +96,7 @@ export const projects = [
       "/three.svg",
       "/fm.svg",
     ],
-    link: "https://github.com/adrianhajdin?tab=repositories",
+    link: "/ui.earth.com",
   },
   {
     id: 2,
@@ -109,7 +110,7 @@ export const projects = [
       "/stream.svg",
       "/c.svg",
     ],
-    link: "https://github.com/adrianhajdin/zoom-clone",
+    link: "/ui.yoom.com",
   },
   {
     id: 3,
@@ -123,7 +124,7 @@ export const projects = [
       "/three.svg",
       "/c.svg",
     ],
-    link: "https://github.com/adrianhajdin/ai_saas_app",
+    link: "/ui.aiimg.com",
   },
   {
     id: 4,
@@ -137,7 +138,7 @@ export const projects = [
       "/three.svg",
       "/gsap.svg",
     ],
-    link: "https://github.com/adrianhajdin/iphone",
+    link: "/ui.apple.com",
   },
 ];
 
