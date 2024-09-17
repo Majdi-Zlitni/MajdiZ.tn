@@ -38,7 +38,7 @@ const Hero = () => {
             Hi I&apos;m Majdi Zlitni, a Software
             Developer based in Tunisia{" "}
           </p>
-          <a href="#about">
+          <a href="https://github.com/Majdi-Zlitni?tab=repositories">
             <MagicButton
               title="My Projects"
               icon={<FaLocationArrow />}
