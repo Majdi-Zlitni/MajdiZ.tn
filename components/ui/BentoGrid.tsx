@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState } from "react";
 import { IoCopyOutline } from "react-icons/io5";
 
@@ -61,6 +62,17 @@ export const BentoGridItem = ({
 
   const [copied, setCopied] = useState(false);
 
+  const resolvedAlt =
+    typeof title === "string" &&
+    title.trim().length > 0
+      ? title
+      : "grid item image";
+  const resolvedSpareAlt =
+    typeof title === "string" &&
+    title.trim().length > 0
+      ? `${title} decoration`
+      : "grid item decoration";
+
   const defaultOptions = {
     loop: copied,
     autoplay: copied,
@@ -97,32 +109,43 @@ export const BentoGridItem = ({
           id === 6 && "flex justify-center"
         } h-full`}
       >
-        <div className="w-full h-full absolute">
+        <div className="absolute inset-0">
           {img && (
-            <img
-              src={img}
-              alt={img}
+            <div
               className={cn(
-                imgClassName,
-                "object-cover object-center "
+                "relative h-full w-full",
+                imgClassName
               )}
-            />
+            >
+              <Image
+                src={img}
+                alt={resolvedAlt}
+                fill
+                className="object-cover object-center"
+                sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 80vw"
+                priority={id === 1}
+              />
+            </div>
           )}
         </div>
-        <div
-          className={`absolute right-0 -bottom-5 ${
-            id === 5 && "w-full opacity-80"
-          } `}
-        >
-          {spareImg && (
-            <img
-              src={spareImg}
-              alt={spareImg}
-              //   width={220}
-              className="object-cover object-center w-full h-full"
-            />
-          )}
-        </div>
+        {spareImg && (
+          <div
+            className={cn(
+              "absolute right-0 -bottom-5",
+              id === 5 && "w-full opacity-80"
+            )}
+          >
+            <div className="relative h-full w-full min-h-32">
+              <Image
+                src={spareImg}
+                alt={resolvedSpareAlt}
+                fill
+                className="object-cover object-center"
+                sizes="(min-width: 1280px) 25vw, (min-width: 768px) 40vw, 60vw"
+              />
+            </div>
+          </div>
+        )}
         {id === 6 && (
           <BackgroundGradientAnimation></BackgroundGradientAnimation>
         )}

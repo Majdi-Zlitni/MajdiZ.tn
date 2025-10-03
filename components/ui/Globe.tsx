@@ -1,6 +1,8 @@
 "use client";
 import {
+  useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -76,8 +78,6 @@ interface WorldProps {
   data: Position[];
 }
 
-let numbersOfRings = [0];
-
 export function Globe({
   globeConfig,
   data,
@@ -97,31 +97,29 @@ export function Globe({
     null
   );
 
-  const defaultProps = {
-    pointSize: 1,
-    atmosphereColor: "#ffffff",
-    showAtmosphere: true,
-    atmosphereAltitude: 0.1,
-    polygonColor: "rgba(255,255,255,0.7)",
-    globeColor: "#1d072e",
-    emissive: "#000000",
-    emissiveIntensity: 0.1,
-    shininess: 0.9,
-    arcTime: 2000,
-    arcLength: 0.9,
-    rings: 1,
-    maxRings: 3,
-    ...globeConfig,
-  };
+  const numbersOfRingsRef = useRef<number[]>([0]);
 
-  useEffect(() => {
-    if (globeRef.current) {
-      _buildData();
-      _buildMaterial();
-    }
-  }, [globeRef.current]);
+  const defaultProps = useMemo(
+    () => ({
+      pointSize: 1,
+      atmosphereColor: "#ffffff",
+      showAtmosphere: true,
+      atmosphereAltitude: 0.1,
+      polygonColor: "rgba(255,255,255,0.7)",
+      globeColor: "#1d072e",
+      emissive: "#000000",
+      emissiveIntensity: 0.1,
+      shininess: 0.9,
+      arcTime: 2000,
+      arcLength: 0.9,
+      rings: 1,
+      maxRings: 3,
+      ...globeConfig,
+    }),
+    [globeConfig]
+  );
 
-  const _buildMaterial = () => {
+  const buildMaterial = useCallback(() => {
     if (!globeRef.current) return;
 
     const globeMaterial =
@@ -132,18 +130,23 @@ export function Globe({
         shininess: number;
       };
     globeMaterial.color = new Color(
-      globeConfig.globeColor
+      defaultProps.globeColor
     );
     globeMaterial.emissive = new Color(
-      globeConfig.emissive
+      defaultProps.emissive
     );
     globeMaterial.emissiveIntensity =
-      globeConfig.emissiveIntensity || 0.1;
+      defaultProps.emissiveIntensity || 0.1;
     globeMaterial.shininess =
-      globeConfig.shininess || 0.9;
-  };
+      defaultProps.shininess || 0.9;
+  }, [
+    defaultProps.emissive,
+    defaultProps.emissiveIntensity,
+    defaultProps.globeColor,
+    defaultProps.shininess,
+  ]);
 
-  const _buildData = () => {
+  const buildData = useCallback(() => {
     const arcs = data;
     let points = [];
     for (let i = 0; i < arcs.length; i++) {
@@ -188,31 +191,16 @@ export function Globe({
     );
 
     setGlobeData(filteredPoints);
-  };
+  }, [data, defaultProps.pointSize]);
 
   useEffect(() => {
-    if (globeRef.current && globeData) {
-      globeRef.current
-        .hexPolygonsData(countries.features)
-        .hexPolygonResolution(3)
-        .hexPolygonMargin(0.7)
-        .showAtmosphere(
-          defaultProps.showAtmosphere
-        )
-        .atmosphereColor(
-          defaultProps.atmosphereColor
-        )
-        .atmosphereAltitude(
-          defaultProps.atmosphereAltitude
-        )
-        .hexPolygonColor((e) => {
-          return defaultProps.polygonColor;
-        });
-      startAnimation();
+    if (globeRef.current) {
+      buildData();
+      buildMaterial();
     }
-  }, [globeData]);
+  }, [buildData, buildMaterial]);
 
-  const startAnimation = () => {
+  const startAnimation = useCallback(() => {
     if (!globeRef.current || !globeData) return;
 
     globeRef.current
@@ -278,22 +266,61 @@ export function Globe({
           defaultProps.arcLength) /
           defaultProps.rings
       );
-  };
+  }, [
+    data,
+    defaultProps.arcLength,
+    defaultProps.arcTime,
+    defaultProps.maxRings,
+    defaultProps.rings,
+    globeData,
+  ]);
+
+  useEffect(() => {
+    if (globeRef.current && globeData) {
+      globeRef.current
+        .hexPolygonsData(countries.features)
+        .hexPolygonResolution(3)
+        .hexPolygonMargin(0.7)
+        .showAtmosphere(
+          defaultProps.showAtmosphere
+        )
+        .atmosphereColor(
+          defaultProps.atmosphereColor
+        )
+        .atmosphereAltitude(
+          defaultProps.atmosphereAltitude
+        )
+        .hexPolygonColor((e) => {
+          return defaultProps.polygonColor;
+        });
+      startAnimation();
+    }
+  }, [
+    defaultProps.atmosphereAltitude,
+    defaultProps.atmosphereColor,
+    defaultProps.polygonColor,
+    defaultProps.showAtmosphere,
+    globeData,
+    startAnimation,
+  ]);
+
+  const dataCount = data.length;
 
   useEffect(() => {
     if (!globeRef.current || !globeData) return;
 
     const interval = setInterval(() => {
       if (!globeRef.current || !globeData) return;
-      numbersOfRings = genRandomNumbers(
-        0,
-        data.length,
-        Math.floor((data.length * 4) / 5)
-      );
+      numbersOfRingsRef.current =
+        genRandomNumbers(
+          0,
+          dataCount,
+          Math.floor((dataCount * 4) / 5)
+        );
 
       globeRef.current.ringsData(
         globeData.filter((d, i) =>
-          numbersOfRings.includes(i)
+          numbersOfRingsRef.current.includes(i)
         )
       );
     }, 2000);
@@ -301,7 +328,7 @@ export function Globe({
     return () => {
       clearInterval(interval);
     };
-  }, [globeRef.current, globeData]);
+  }, [dataCount, globeData]);
 
   return (
     <>
@@ -317,7 +344,7 @@ export function WebGLRendererConfig() {
     gl.setPixelRatio(window.devicePixelRatio);
     gl.setSize(size.width, size.height);
     gl.setClearColor(0xffaaff, 0);
-  }, []);
+  }, [gl, size.height, size.width]);
 
   return null;
 }
