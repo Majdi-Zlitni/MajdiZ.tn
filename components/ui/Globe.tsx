@@ -16,22 +16,10 @@ import {
 import ThreeGlobe from "three-globe";
 import {
   useThree,
-  Object3DNode,
   Canvas,
-  extend,
 } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import countries from "@/data/globe.json";
-declare module "@react-three/fiber" {
-  interface ThreeElements {
-    threeGlobe: Object3DNode<
-      ThreeGlobe,
-      typeof ThreeGlobe
-    >;
-  }
-}
-
-extend({ ThreeGlobe });
 
 const RING_PROPAGATION_SPEED = 3;
 const aspect = 1.2;
@@ -78,23 +66,28 @@ interface WorldProps {
   data: Position[];
 }
 
+type GlobePoint = {
+  size: number | undefined;
+  order: number;
+  color: (t: number) => string;
+  lat: number;
+  lng: number;
+};
+
 export function Globe({
   globeConfig,
   data,
 }: WorldProps) {
   const [globeData, setGlobeData] = useState<
-    | {
-        size: number;
-        order: number;
-        color: (t: number) => string;
-        lat: number;
-        lng: number;
-      }[]
-    | null
-  >(null);
+    GlobePoint[]
+  >([]);
 
   const globeRef = useRef<ThreeGlobe | null>(
     null
+  );
+  const globeObject = useMemo(
+    () => new ThreeGlobe(),
+    []
   );
 
   const numbersOfRingsRef = useRef<number[]>([0]);
@@ -146,11 +139,36 @@ export function Globe({
     defaultProps.shininess,
   ]);
 
+  const sanitizedData = useMemo(
+    () =>
+      data.filter((item) => {
+        const values = [
+          item.startLat,
+          item.startLng,
+          item.endLat,
+          item.endLng,
+          item.arcAlt,
+        ];
+        const valid = values.every(
+          Number.isFinite
+        );
+        if (!valid)
+          console.warn(
+            "Skipping invalid globe arc",
+            item
+          );
+        return valid;
+      }),
+    [data]
+  );
+
   const buildData = useCallback(() => {
-    const arcs = data;
-    let points = [];
-    for (let i = 0; i < arcs.length; i++) {
-      const arc = arcs[i];
+    if (!sanitizedData.length) {
+      setGlobeData([]);
+      return;
+    }
+    const points = [];
+    for (const arc of sanitizedData) {
       const rgb = hexToRgb(arc.color) as {
         r: number;
         g: number;
@@ -191,72 +209,39 @@ export function Globe({
     );
 
     setGlobeData(filteredPoints);
-  }, [data, defaultProps.pointSize]);
+  }, [sanitizedData, defaultProps.pointSize]);
 
   useEffect(() => {
     if (globeRef.current) {
       buildData();
       buildMaterial();
+    } else {
+      globeRef.current = globeObject;
+      buildData();
+      buildMaterial();
     }
-  }, [buildData, buildMaterial]);
+  }, [buildData, buildMaterial, globeObject]);
 
   const startAnimation = useCallback(() => {
-    if (!globeRef.current || !globeData) return;
+    if (!globeRef.current || !globeData?.length)
+      return;
 
     globeRef.current
-      .arcsData(data)
-      .arcStartLat(
-        (d) =>
-          (d as { startLat: number }).startLat * 1
-      )
-      .arcStartLng(
-        (d) =>
-          (d as { startLng: number }).startLng * 1
-      )
-      .arcEndLat(
-        (d) =>
-          (d as { endLat: number }).endLat * 1
-      )
-      .arcEndLng(
-        (d) =>
-          (d as { endLng: number }).endLng * 1
-      )
+      .arcsData(sanitizedData)
       .arcColor(
-        (e: any) => (e as { color: string }).color
+        (arc: any) =>
+          (arc as Position).color ??
+          defaultProps.globeColor
       )
-      .arcAltitude((e) => {
-        return (
-          (e as { arcAlt: number }).arcAlt * 1
-        );
-      })
-      .arcStroke((e) => {
-        return [0.32, 0.28, 0.3][
-          Math.round(Math.random() * 2)
-        ];
-      })
-      .arcDashLength(defaultProps.arcLength)
-      .arcDashInitialGap(
-        (e) => (e as { order: number }).order * 1
-      )
-      .arcDashGap(15)
-      .arcDashAnimateTime(
-        (e) => defaultProps.arcTime
-      );
-
-    globeRef.current
-      .pointsData(data)
-      .pointColor(
-        (e) => (e as { color: string }).color
-      )
+      .pointsData(globeData)
+      .pointColor("color")
       .pointsMerge(true)
-      .pointAltitude(0.0)
+      .pointAltitude(0)
       .pointRadius(2);
 
     globeRef.current
       .ringsData([])
-      .ringColor(
-        (e: any) => (t: any) => e.color(t)
-      )
+      .ringColor("color")
       .ringMaxRadius(defaultProps.maxRings)
       .ringPropagationSpeed(
         RING_PROPAGATION_SPEED
@@ -267,12 +252,12 @@ export function Globe({
           defaultProps.rings
       );
   }, [
-    data,
+    sanitizedData,
+    globeData,
     defaultProps.arcLength,
     defaultProps.arcTime,
     defaultProps.maxRings,
     defaultProps.rings,
-    globeData,
   ]);
 
   useEffect(() => {
@@ -307,7 +292,8 @@ export function Globe({
   const dataCount = data.length;
 
   useEffect(() => {
-    if (!globeRef.current || !globeData) return;
+    if (!globeRef.current || !globeData?.length)
+      return;
 
     const interval = setInterval(() => {
       if (!globeRef.current || !globeData) return;
@@ -319,7 +305,7 @@ export function Globe({
         );
 
       globeRef.current.ringsData(
-        globeData.filter((d, i) =>
+        globeData.filter((_, i) =>
           numbersOfRingsRef.current.includes(i)
         )
       );
@@ -332,7 +318,7 @@ export function Globe({
 
   return (
     <>
-      <threeGlobe ref={globeRef} />
+      <primitive object={globeObject} />
     </>
   );
 }
