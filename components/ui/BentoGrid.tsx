@@ -13,7 +13,7 @@ import MagicButton from "./MagicButton";
 
 // Also install this npm i --save-dev @types/react-lottie
 const Lottie = dynamic(
-  () => import("react-lottie"),
+  () => import("lottie-react"),
   {
     ssr: false,
   }

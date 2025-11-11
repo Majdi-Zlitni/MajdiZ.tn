@@ -33,7 +33,7 @@ const Hero = () => {
           </h2> */}
           <TextGenerateEffect
             className="text-center text-[40px] md:text-5xl lg:text-6xl"
-            words="Being the extraordinary in an ordinary world"
+            words="Being Extraordinary In An Ordinary World!"
           ></TextGenerateEffect>
           <div className="relative w-48 h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 mt-4">
             <Image
