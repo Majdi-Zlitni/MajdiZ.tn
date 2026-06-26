@@ -1,4 +1,8 @@
-import { FaLocationArrow } from "react-icons/fa";
+import {
+  FaGithub,
+  FaLocationArrow,
+} from "react-icons/fa";
+import { FaLinkedin } from "react-icons/fa";
 import { Spotlight } from "./ui/Spotlight";
 import { TextGenerateEffect } from "./ui/TextGenerateEffect";
 import MagicButton from "./ui/MagicButton";
@@ -49,13 +53,30 @@ const Hero = () => {
             Hi I&apos;m Majdi Zlitni, a Software
             Developer based in Tunisia{" "}
           </p>
-          <a href="https://github.com/Majdi-Zlitni?tab=repositories">
-            <MagicButton
-              title="My Projects"
-              icon={<FaLocationArrow />}
-              position="right"
-            />
-          </a>
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <a
+              href="https://github.com/Majdi-Zlitni?tab=repositories"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <MagicButton
+                title="GitHub Profile"
+                icon={<FaGithub />}
+                position="right"
+              />
+            </a>
+            <a
+              href="https://www.linkedin.com/in/majdi-zlitni/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <MagicButton
+                title="LinkedIn Profile"
+                icon={<FaLinkedin />}
+                position="right"
+              />
+            </a>
+          </div>
         </div>
       </div>
     </div>
